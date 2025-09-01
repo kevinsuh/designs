@@ -276,7 +276,7 @@ export default function FitnessCoachDashboard() {
       </header>
 
       <div className="container mx-auto px-6 py-12">
-        <div className="grid gap-16">
+        <div className="grid gap-24">
 
           <div className="space-y-8">
             <div>
@@ -363,8 +363,18 @@ export default function FitnessCoachDashboard() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-xl font-bold text-black">
-                  {calendarView === 'last7' ? 'Last 7 Days' : 
-                   calendarView === 'last30' ? 'Last 30 Days' : 'All 100 Days'}
+                  {(() => {
+                    const getCurrentMonth = () => {
+                      if (calendarView === 'last7') {
+                        return last7Days[0]?.fullDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                      } else if (calendarView === 'last30') {
+                        return last30Days[0]?.fullDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                      } else {
+                        return all100Days[0]?.fullDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                      }
+                    }
+                    return getCurrentMonth()
+                  })()}
                 </h3>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -577,38 +587,23 @@ export default function FitnessCoachDashboard() {
           </div>
 
           <div className="space-y-8">
-            <div>
+            <div className="text-center">
               <h2 className="font-bold text-black tracking-tight text-3xl mb-3.5">Top Insights</h2>
-              <p className="text-gray-600 text-lg">Your main wins and areas for improvement</p>
             </div>
 
-            <div className="grid gap-8 md:grid-cols-2">
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold text-black">🏆 Wins</h3>
-                <div className="space-y-3">
-                  {topInsights.wins.map((insight, index) => (
-                    <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl">{insight.emoji}</span>
-                        <p className="text-sm text-green-800 font-medium">{insight.text}</p>
-                      </div>
-                    </div>
-                  ))}
+            <div className="max-w-2xl mx-auto space-y-3">
+              {topInsights.wins.map((insight, index) => (
+                <div key={`win-${index}`} className="flex items-start gap-3">
+                  <span className="text-lg">🏆</span>
+                  <p className="text-black">{insight.text}</p>
                 </div>
-              </div>
-              <div className="space-y-4">
-                <h3 className="text-xl font-bold text-black">👀 Areas for Improvement</h3>
-                <div className="space-y-3">
-                  {topInsights.improvements.map((insight, index) => (
-                    <div key={index} className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl">{insight.emoji}</span>
-                        <p className="text-sm text-amber-800 font-medium">{insight.text}</p>
-                      </div>
-                    </div>
-                  ))}
+              ))}
+              {topInsights.improvements.map((insight, index) => (
+                <div key={`improvement-${index}`} className="flex items-start gap-3">
+                  <span className="text-lg">👀</span>
+                  <p className="text-black">{insight.text}</p>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
 
@@ -616,7 +611,6 @@ export default function FitnessCoachDashboard() {
             <div className="space-y-8">
               <div className="text-center">
                 <h2 className="text-3xl font-bold text-black mb-2 tracking-tight">Have questions for me?</h2>
-                <p className="text-gray-600 text-lg mb-8">Get insights based on your recent performance and goals</p>
               </div>
               
               <div className="flex justify-center">
