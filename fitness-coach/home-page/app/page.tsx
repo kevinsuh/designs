@@ -10,8 +10,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts"
-import { Upload, MessageCircle, Activity, ArrowRight, Dumbbell, RotateCcw, BarChart3, X, FileText } from "lucide-react"
+import { Upload, MessageCircle, Activity, ArrowRight, Dumbbell, RotateCcw, BarChart3, X, FileText, ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 
 // Mock data for demonstration
 const progressData = [
@@ -40,17 +41,65 @@ const recentThreads = [
   { id: 5, title: "Goal setting session", lastMessage: "Your new targets look great!", timestamp: "1 week ago" },
 ]
 
-// Conversation starters data
+// Top insights data
+const topInsights = {
+  wins: [
+    { text: "You're running an average of 30 seconds faster per mile than 1 year ago", emoji: "🏆" },
+    { text: "You've increased your top bench press from 180 lb to 225 lb", emoji: "🏆" },
+    { text: "Your consistency has improved - 28 workouts completed this month vs 18 last month", emoji: "🏆" },
+  ],
+  improvements: [
+    { text: "Your sleep score has decreased this month compared to last month", emoji: "👀" },
+    { text: "You've been in a caloric surplus for 15 of the last 30 days", emoji: "👀" },
+    { text: "Your recovery time between sets has increased by 20% this week", emoji: "👀" },
+  ]
+}
+
+// Monthly calendar data for current month (January 2025) - Strava style
+const generateCalendarData = () => {
+  const days = []
+  const currentDate = new Date(2025, 0, 1) // January 2025
+  const daysInMonth = new Date(2025, 0 + 1, 0).getDate()
+  const firstDayOfWeek = new Date(2025, 0, 1).getDay()
+  
+  // Add empty cells for days before the first day of the month
+  for (let i = 0; i < firstDayOfWeek; i++) {
+    days.push(null)
+  }
+  
+  // Generate mock daily activity data for each day
+  for (let day = 1; day <= daysInMonth; day++) {
+    const hasRun = Math.random() > 0.6 // 40% chance of running
+    const hasLift = Math.random() > 0.5 // 50% chance of lifting
+    const metCalorieGoal = Math.random() > 0.3 // 70% chance of meeting calorie goal
+    
+    days.push({
+      date: day,
+      activities: {
+        run: hasRun,
+        lift: hasLift,
+        calories: metCalorieGoal,
+      }
+    })
+  }
+  
+  return days
+}
+
+const calendarData = generateCalendarData()
+
+// Conversation starters data - updated with dynamic insights
 const conversationStarters = [
-  { icon: Dumbbell, title: "Past Training", description: "Review recent workouts" },
-  { icon: RotateCcw, title: "Recovery", description: "Optimize rest and sleep" },
-  { icon: BarChart3, title: "Planning", description: "Set new fitness goals" },
+  { icon: Dumbbell, title: "Sleep Score", description: "Why do you think my sleep score might have gotten worse?" },
+  { icon: RotateCcw, title: "Caloric Surplus", description: "What are common patterns that led to a caloric surplus?" },
+  { icon: BarChart3, title: "Recovery Time", description: "How can I improve my recovery between sets?" },
 ]
 
 export default function FitnessCoachDashboard() {
   const [chatMessage, setChatMessage] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
+  const [currentMonth, setCurrentMonth] = useState(0) // 0 = January 2025
   const [dexaData, setDexaData] = useState({
     scanDate: "",
     bodyFatPercentage: "",
@@ -108,13 +157,19 @@ export default function FitnessCoachDashboard() {
               <h1 className="text-2xl font-bold text-black tracking-tight">FitCoach AI</h1>
             </div>
             <div className="flex items-center gap-6">
-              <Badge variant="secondary" className="text-sm font-medium bg-gray-100 text-gray-800">
-                Day 35 of 100
-              </Badge>
-              <Avatar>
-                <AvatarImage src="/fitness-user-avatar.png" />
-                <AvatarFallback>JD</AvatarFallback>
-              </Avatar>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Avatar className="cursor-pointer">
+                    <AvatarImage src="/fitness-user-avatar.png" />
+                    <AvatarFallback>JD</AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>Personal Profile</DropdownMenuItem>
+                  <DropdownMenuItem>Settings</DropdownMenuItem>
+                  <DropdownMenuItem>Sign Out</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -122,214 +177,35 @@ export default function FitnessCoachDashboard() {
 
       <div className="container mx-auto px-6 py-12">
         <div className="grid gap-16">
-          <div className="grid gap-16 lg:grid-cols-12">
-            <div className="lg:col-span-8 space-y-8">
-              <div>
-                <h2 className="font-bold text-black tracking-tight text-3xl mb-3.5">Weekly Activity Overview</h2>
-                <p className="text-gray-600 text-lg">Your activity across all connected apps</p>
-              </div>
-
-              <div className="h-80 bg-gray-50 rounded-lg p-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={activityData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="week" className="text-xs" />
-                    <YAxis className="text-xs" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                      }}
-                    />
-                    <Bar dataKey="runs" fill="#000000" name="Runs" />
-                    <Bar dataKey="lifts" fill="#6b7280" name="Strength Sessions" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+          <div className="space-y-8">
+            <div>
+              <h2 className="font-bold text-black tracking-tight text-3xl mb-3.5">Weekly Activity Overview</h2>
+              <p className="text-gray-600 text-lg">Your activity across all connected apps</p>
             </div>
 
-            <div className="lg:col-span-4 space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold text-black mb-2 tracking-tight">Personal Profile</h2>
-                <p className="text-gray-600">Your current stats</p>
-              </div>
-
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">Age</p>
-                    <p className="text-xl font-bold text-black">32</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">Height</p>
-                    <p className="text-xl font-bold text-black">5'10"</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">Weight</p>
-                    <p className="text-xl font-bold text-black">177.1 lbs</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">Body Fat</p>
-                    <p className="text-xl font-bold text-black">12.8%</p>
-                  </div>
-                </div>
-
-                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="w-full h-10 bg-black text-white hover:bg-gray-800 font-medium text-sm">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Upload DEXA Scan
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md bg-white">
-                    <DialogHeader>
-                      <DialogTitle className="text-xl font-bold text-black">Upload DEXA Scan</DialogTitle>
-                    </DialogHeader>
-
-                    <div className="space-y-6">
-                      {!uploadedFile ? (
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
-                          <input
-                            type="file"
-                            id="dexa-upload"
-                            accept=".pdf,.jpg,.jpeg,.png"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                          <label htmlFor="dexa-upload" className="cursor-pointer">
-                            <Upload className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                            <p className="text-lg font-medium text-black mb-2">Upload your DEXA scan</p>
-                            <p className="text-sm text-gray-600">PDF, JPG, or PNG files accepted</p>
-                          </label>
-                        </div>
-                      ) : (
-                        <div className="space-y-6">
-                          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                            <FileText className="h-5 w-5 text-gray-600" />
-                            <span className="text-sm font-medium text-black">{uploadedFile.name}</span>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setUploadedFile(null)
-                                setDexaData({
-                                  scanDate: "",
-                                  bodyFatPercentage: "",
-                                  leanMass: "",
-                                  boneDensity: "",
-                                  visceralFat: "",
-                                  totalWeight: "",
-                                })
-                              }}
-                              className="ml-auto p-1 h-auto"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="scanDate" className="text-sm font-medium text-black">
-                                Scan Date
-                              </Label>
-                              <Input
-                                id="scanDate"
-                                type="date"
-                                value={dexaData.scanDate}
-                                onChange={(e) => setDexaData({ ...dexaData, scanDate: e.target.value })}
-                                className="mt-1"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="bodyFat" className="text-sm font-medium text-black">
-                                Body Fat %
-                              </Label>
-                              <Input
-                                id="bodyFat"
-                                value={dexaData.bodyFatPercentage}
-                                onChange={(e) => setDexaData({ ...dexaData, bodyFatPercentage: e.target.value })}
-                                placeholder="12.8"
-                                className="mt-1"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="leanMass" className="text-sm font-medium text-black">
-                                Lean Mass (lbs)
-                              </Label>
-                              <Input
-                                id="leanMass"
-                                value={dexaData.leanMass}
-                                onChange={(e) => setDexaData({ ...dexaData, leanMass: e.target.value })}
-                                placeholder="154.2"
-                                className="mt-1"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="boneDensity" className="text-sm font-medium text-black">
-                                Bone Density
-                              </Label>
-                              <Input
-                                id="boneDensity"
-                                value={dexaData.boneDensity}
-                                onChange={(e) => setDexaData({ ...dexaData, boneDensity: e.target.value })}
-                                placeholder="1.15"
-                                className="mt-1"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="visceralFat" className="text-sm font-medium text-black">
-                                Visceral Fat
-                              </Label>
-                              <Input
-                                id="visceralFat"
-                                value={dexaData.visceralFat}
-                                onChange={(e) => setDexaData({ ...dexaData, visceralFat: e.target.value })}
-                                placeholder="0.8"
-                                className="mt-1"
-                              />
-                            </div>
-                            <div>
-                              <Label htmlFor="totalWeight" className="text-sm font-medium text-black">
-                                Total Weight (lbs)
-                              </Label>
-                              <Input
-                                id="totalWeight"
-                                value={dexaData.totalWeight}
-                                onChange={(e) => setDexaData({ ...dexaData, totalWeight: e.target.value })}
-                                placeholder="177.1"
-                                className="mt-1"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex gap-3 pt-4">
-                            <Button
-                              variant="outline"
-                              onClick={() => setIsModalOpen(false)}
-                              className="flex-1 border-gray-300 hover:border-gray-400 text-black"
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              onClick={handleSubmitDexaScan}
-                              className="flex-1 bg-black text-white hover:bg-gray-800"
-                            >
-                              Save DEXA Scan
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              </div>
+            <div className="h-80 bg-gray-50 rounded-lg p-6">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={activityData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="week" className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #e5e7eb",
+                      borderRadius: "8px",
+                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                    }}
+                  />
+                  <Bar dataKey="runs" fill="#000000" name="Runs" />
+                  <Bar dataKey="lifts" fill="#6b7280" name="Strength Sessions" />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="grid gap-16 lg:grid-cols-12">
-            <div className="lg:col-span-8 space-y-8">
+          <div className="space-y-8">
+            <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-3 mb-2">
                   <h2 className="text-3xl font-bold text-black tracking-tight">100-Day Body Recomposition</h2>
@@ -339,88 +215,187 @@ export default function FitnessCoachDashboard() {
                   Goal: Lose 10 lbs while maintaining lean mass • Started Jan 1, 2025
                 </p>
               </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem>View Past Plans</DropdownMenuItem>
+                  <DropdownMenuItem>Start New Plan</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
 
-              <div className="grid gap-8 md:grid-cols-3">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500 font-medium uppercase tracking-wide text-sm">Weight Loss</span>
-                    <span className="text-lg font-bold text-black">2.9 / 10 lbs</span>
-                  </div>
-                  <Progress value={29} className="h-2 bg-gray-100" />
-                  <p className="text-sm text-gray-600">29% complete</p>
+            <div className="grid gap-8 md:grid-cols-3">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 font-medium uppercase tracking-wide text-sm">Weight Loss</span>
+                  <span className="text-lg font-bold text-black">2.9 / 10 lbs</span>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500 font-medium uppercase tracking-wide text-sm">Caloric Deficit</span>
-                    <span className="text-lg font-bold text-black">-1,750 cal</span>
-                  </div>
-                  <Progress value={87} className="h-2 bg-gray-100" />
-                  <p className="text-sm text-gray-600">Weekly target: -2,000 cal</p>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-500 font-medium uppercase tracking-wide text-sm">Workouts</span>
-                    <span className="text-lg font-bold text-black">28 / 35</span>
-                  </div>
-                  <Progress value={80} className="h-2 bg-gray-100" />
-                  <p className="text-sm text-gray-600">5 workouts/week target</p>
-                </div>
+                <Progress value={29} className="h-2 bg-gray-100" />
+                <p className="text-sm text-gray-600">29% complete</p>
               </div>
-
-              <div className="h-80 bg-gray-50 rounded-lg p-6">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={progressData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="day" className="text-xs" />
-                    <YAxis className="text-xs" />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "white",
-                        border: "1px solid #e5e7eb",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="weight"
-                      stroke="#000000"
-                      strokeWidth={3}
-                      dot={{ fill: "#000000", strokeWidth: 2, r: 4 }}
-                    />
-                    <Line type="monotone" dataKey="calories" stroke="#6b7280" strokeWidth={2} strokeDasharray="5 5" />
-                  </LineChart>
-                </ResponsiveContainer>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 font-medium uppercase tracking-wide text-sm">Caloric Deficit</span>
+                  <span className="text-lg font-bold text-black">-1,750 cal</span>
+                </div>
+                <Progress value={87} className="h-2 bg-gray-100" />
+                <p className="text-sm text-gray-600">Weekly target: -2,000 cal</p>
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-500 font-medium uppercase tracking-wide text-sm">Workouts</span>
+                  <span className="text-lg font-bold text-black">28 / 35</span>
+                </div>
+                <Progress value={80} className="h-2 bg-gray-100" />
+                <p className="text-sm text-gray-600">5 workouts/week target</p>
               </div>
             </div>
 
-            <div className="lg:col-span-4 space-y-8">
-              <div>
-                <h2 className="text-2xl font-bold text-black mb-2 tracking-tight">Past Plans</h2>
-                <p className="text-gray-600">Your completed fitness journeys</p>
-              </div>
-
+            <div className="grid gap-8 md:grid-cols-2">
               <div className="space-y-4">
-                <div className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 cursor-pointer transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-bold text-black">Summer Cut 2024</p>
-                    <Badge className="bg-black text-white text-xs">-15 lbs</Badge>
+                <h3 className="text-xl font-bold text-black">Start</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">Body Fat</p>
+                      <p className="text-lg font-bold text-black">18.5%</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">Lean Mass Index</p>
+                      <p className="text-lg font-bold text-black">19.2</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600">90 days • Completed Aug 15, 2024</p>
                 </div>
-                <div className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 cursor-pointer transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-bold text-black">Strength Building</p>
-                    <Badge className="bg-black text-white text-xs">+8 lbs muscle</Badge>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-black">Goal</h3>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">Body Fat</p>
+                      <p className="text-lg font-bold text-black">12.8%</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">Lean Mass Index</p>
+                      <p className="text-lg font-bold text-black">19.2+</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-gray-600">120 days • Completed May 10, 2024</p>
                 </div>
-                <div className="p-4 border border-gray-200 rounded-lg hover:border-gray-300 cursor-pointer transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="font-bold text-black">Marathon Prep</p>
-                    <Badge className="bg-black text-white text-xs">26.2 miles</Badge>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-black">January 2025</h3>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setCurrentMonth(Math.max(0, currentMonth - 1))}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setCurrentMonth(Math.min(3, currentMonth + 1))}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-6">
+                <div className="grid grid-cols-7 gap-1">
+                  {/* Day headers */}
+                  {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
+                    <div key={day} className="p-2 text-center">
+                      <p className="text-gray-500 text-xs font-medium uppercase tracking-wide">{day}</p>
+                    </div>
+                  ))}
+                  
+                  {/* Calendar days */}
+                  {calendarData.map((day, index) => (
+                    <div key={index} className="aspect-square p-1">
+                      {day ? (
+                        <div className={`h-full w-full rounded-lg p-2 flex flex-col items-center justify-between relative ${
+                          day.date === new Date().getDate() ? 'bg-red-100 border border-red-300' : 'hover:bg-gray-100'
+                        }`}>
+                          {/* Today indicator */}
+                          {day.date === new Date().getDate() && (
+                            <div className="absolute -top-1 -right-1">
+                              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                            </div>
+                          )}
+                          
+                          {/* Day number */}
+                          <span className="text-sm font-medium text-gray-900">{day.date}</span>
+                          
+                          {/* Activity dots */}
+                          <div className="flex gap-1 flex-wrap justify-center">
+                            {day.activities.run && (
+                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                            )}
+                            {day.activities.lift && (
+                              <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                            )}
+                            {day.activities.calories && (
+                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="h-full"></div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Legend */}
+                <div className="mt-4 flex items-center justify-center gap-6 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span className="text-gray-600">Running</span>
                   </div>
-                  <p className="text-sm text-gray-600">180 days • Completed Oct 22, 2023</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                    <span className="text-gray-600">Strength Training</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span className="text-gray-600">Calorie Goal Met</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-8">
+            <div>
+              <h2 className="font-bold text-black tracking-tight text-3xl mb-3.5">Top Insights</h2>
+              <p className="text-gray-600 text-lg">Your main wins and areas for improvement</p>
+            </div>
+
+            <div className="grid gap-8 md:grid-cols-2">
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-black">🏆 Wins</h3>
+                <div className="space-y-3">
+                  {topInsights.wins.map((insight, index) => (
+                    <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">{insight.emoji}</span>
+                        <p className="text-sm text-green-800 font-medium">{insight.text}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-4">
+                <h3 className="text-xl font-bold text-black">👀 Areas for Improvement</h3>
+                <div className="space-y-3">
+                  {topInsights.improvements.map((insight, index) => (
+                    <div key={index} className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">{insight.emoji}</span>
+                        <p className="text-sm text-amber-800 font-medium">{insight.text}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -428,6 +403,11 @@ export default function FitnessCoachDashboard() {
 
           <div className="space-y-12">
             <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="text-3xl font-bold text-black mb-2 tracking-tight">Have questions for me?</h2>
+                <p className="text-gray-600 text-lg mb-8">Get insights based on your recent performance and goals</p>
+              </div>
+              
               <div className="flex justify-center">
                 <div className="max-w-2xl w-full">
                   <Input
