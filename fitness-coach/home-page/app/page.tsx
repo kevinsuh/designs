@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
@@ -195,6 +196,7 @@ const conversationStarters = [
 ]
 
 export default function FitnessCoachDashboard() {
+  const router = useRouter()
   const [chatMessage, setChatMessage] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
@@ -265,7 +267,9 @@ export default function FitnessCoachDashboard() {
                   </Avatar>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>Personal Profile</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/profile')}>
+                    Personal Profile
+                  </DropdownMenuItem>
                   <DropdownMenuItem>Settings</DropdownMenuItem>
                   <DropdownMenuItem>Sign Out</DropdownMenuItem>
                 </DropdownMenuContent>
