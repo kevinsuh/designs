@@ -177,55 +177,27 @@ export default function FitnessCoachDashboard() {
 
       <div className="container mx-auto px-6 py-12">
         <div className="grid gap-16">
+
           <div className="space-y-8">
             <div>
-              <h2 className="font-bold text-black tracking-tight text-3xl mb-3.5">Weekly Activity Overview</h2>
-              <p className="text-gray-600 text-lg">Your activity across all connected apps</p>
-            </div>
-
-            <div className="h-80 bg-gray-50 rounded-lg p-6">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={activityData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="week" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "1px solid #e5e7eb",
-                      borderRadius: "8px",
-                      boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                    }}
-                  />
-                  <Bar dataKey="runs" fill="#000000" name="Runs" />
-                  <Bar dataKey="lifts" fill="#6b7280" name="Strength Sessions" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-3xl font-bold text-black tracking-tight">100-Day Body Recomposition</h2>
-                  <Badge className="bg-black text-white font-medium">ACTIVE</Badge>
-                </div>
-                <p className="text-gray-600 text-lg">
-                  Goal: Lose 10 lbs while maintaining lean mass • Started Jan 1, 2025
-                </p>
+              <div className="flex items-center gap-3 mb-2">
+                <h2 className="text-3xl font-bold text-black tracking-tight">100-Day Body Recomposition</h2>
+                <Badge className="bg-black text-white font-medium">ACTIVE</Badge>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem>View Past Plans</DropdownMenuItem>
+                    <DropdownMenuItem>Start New Plan</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem>View Past Plans</DropdownMenuItem>
-                  <DropdownMenuItem>Start New Plan</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <p className="text-gray-600 text-lg">
+                Goal: Lose 10 lbs while maintaining lean mass • Started Jan 1, 2025
+              </p>
             </div>
 
             <div className="grid gap-8 md:grid-cols-3">
