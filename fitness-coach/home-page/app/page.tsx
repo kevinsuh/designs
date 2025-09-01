@@ -88,6 +88,105 @@ const generateCalendarData = () => {
 
 const calendarData = generateCalendarData()
 
+// Generate Last 7 Days data
+const generateLast7Days = () => {
+  const days = []
+  const today = new Date()
+  
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+    
+    const hasRun = Math.random() > 0.6
+    const hasLift = Math.random() > 0.5
+    const metCalorieGoal = Math.random() > 0.3
+    
+    days.push({
+      date: date.getDate(),
+      month: date.getMonth(),
+      year: date.getFullYear(),
+      dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      fullDate: date,
+      activities: {
+        run: hasRun,
+        lift: hasLift,
+        calories: metCalorieGoal,
+      }
+    })
+  }
+  
+  return days
+}
+
+// Generate Last 30 Days data
+const generateLast30Days = () => {
+  const days = []
+  const today = new Date()
+  
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+    
+    const hasRun = Math.random() > 0.6
+    const hasLift = Math.random() > 0.5
+    const metCalorieGoal = Math.random() > 0.3
+    
+    days.push({
+      date: date.getDate(),
+      month: date.getMonth(),
+      year: date.getFullYear(),
+      dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      fullDate: date,
+      monthName: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      activities: {
+        run: hasRun,
+        lift: hasLift,
+        calories: metCalorieGoal,
+      }
+    })
+  }
+  
+  return days
+}
+
+// Generate All 100 Days data (assuming we're on day 100)
+const generateAll100Days = () => {
+  const days = []
+  const today = new Date() // Assuming this is day 100
+  const startDate = new Date(today)
+  startDate.setDate(startDate.getDate() - 99) // Go back 99 days to get day 1
+  
+  for (let i = 0; i < 100; i++) {
+    const date = new Date(startDate)
+    date.setDate(date.getDate() + i)
+    
+    const hasRun = Math.random() > 0.6
+    const hasLift = Math.random() > 0.5
+    const metCalorieGoal = Math.random() > 0.3
+    
+    days.push({
+      date: date.getDate(),
+      month: date.getMonth(),
+      year: date.getFullYear(),
+      dayName: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      fullDate: date,
+      monthName: date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+      planDay: i + 1, // Day 1-100 of the plan
+      activities: {
+        run: hasRun,
+        lift: hasLift,
+        calories: metCalorieGoal,
+      }
+    })
+  }
+  
+  return days
+}
+
+const last7Days = generateLast7Days()
+const last30Days = generateLast30Days()
+const all100Days = generateAll100Days()
+
 // Conversation starters data - updated with dynamic insights
 const conversationStarters = [
   { icon: Dumbbell, title: "Sleep Score", description: "Why do you think my sleep score might have gotten worse?" },
@@ -100,6 +199,7 @@ export default function FitnessCoachDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<File | null>(null)
   const [currentMonth, setCurrentMonth] = useState(0) // 0 = January 2025
+  const [calendarView, setCalendarView] = useState<'last7' | 'last30' | 'all'>('last7')
   const [dexaData, setDexaData] = useState({
     scanDate: "",
     bodyFatPercentage: "",
@@ -262,61 +362,200 @@ export default function FitnessCoachDashboard() {
 
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-black">January 2025</h3>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setCurrentMonth(Math.max(0, currentMonth - 1))}>
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => setCurrentMonth(Math.min(3, currentMonth + 1))}>
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
+                <h3 className="text-xl font-bold text-black">
+                  {calendarView === 'last7' ? 'Last 7 Days' : 
+                   calendarView === 'last30' ? 'Last 30 Days' : 'All 100 Days'}
+                </h3>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="text-sm">
+                      {calendarView === 'last7' ? 'Last 7 Days' : 
+                       calendarView === 'last30' ? 'Last 30 Days' : 'All Days'}
+                      <ChevronLeft className="ml-2 h-4 w-4 -rotate-90" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => setCalendarView('last7')}>
+                      Last 7 Days
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCalendarView('last30')}>
+                      Last 30 Days
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCalendarView('all')}>
+                      All Days
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
+              
               <div className="bg-gray-50 rounded-lg p-6">
-                <div className="grid grid-cols-7 gap-1">
-                  {/* Day headers */}
-                  {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
-                    <div key={day} className="p-2 text-center">
-                      <p className="text-gray-500 text-xs font-medium uppercase tracking-wide">{day}</p>
-                    </div>
-                  ))}
-                  
-                  {/* Calendar days */}
-                  {calendarData.map((day, index) => (
-                    <div key={index} className="aspect-square p-1">
-                      {day ? (
-                        <div className={`h-full w-full rounded-lg p-2 flex flex-col items-center justify-between relative ${
-                          day.date === new Date().getDate() ? 'bg-red-100 border border-red-300' : 'hover:bg-gray-100'
-                        }`}>
-                          {/* Today indicator */}
-                          {day.date === new Date().getDate() && (
-                            <div className="absolute -top-1 -right-1">
-                              <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                            </div>
-                          )}
-                          
-                          {/* Day number */}
-                          <span className="text-sm font-medium text-gray-900">{day.date}</span>
-                          
-                          {/* Activity dots */}
-                          <div className="flex gap-1 flex-wrap justify-center">
-                            {day.activities.run && (
-                              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            )}
-                            {day.activities.lift && (
-                              <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                            )}
-                            {day.activities.calories && (
-                              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            )}
-                          </div>
+                {calendarView === 'last7' && (
+                  <div>
+                    {/* Day headers */}
+                    <div className="grid grid-cols-7 gap-0 mb-2">
+                      {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => (
+                        <div key={day} className="p-2 text-center">
+                          <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">{day}</p>
                         </div>
-                      ) : (
-                        <div className="h-full"></div>
-                      )}
+                      ))}
                     </div>
-                  ))}
-                </div>
+                    
+                    {/* Calendar grid */}
+                    <div className="grid grid-cols-7 gap-0 border border-gray-200 rounded-lg overflow-hidden">
+                      {last7Days.map((day, index) => {
+                        const isFirstOfMonth = day.date === 1
+                        const monthName = day.fullDate.toLocaleDateString('en-US', { month: 'long' })
+                        
+                        return (
+                          <div key={index} className="border-r border-b border-gray-200 last:border-r-0 bg-white min-h-[120px] p-2">
+                            <div className="mb-2">
+                              <p className="text-sm font-bold text-black">
+                                {isFirstOfMonth ? `${monthName} ${day.date}` : day.date}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              {day.activities.run && (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                  <span className="text-xs text-gray-600">Run</span>
+                                </div>
+                              )}
+                              {day.activities.lift && (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                                  <span className="text-xs text-gray-600">Lift</span>
+                                </div>
+                              )}
+                              {day.activities.calories && (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  <span className="text-xs text-gray-600">Deficit</span>
+                                </div>
+                              )}
+                              {!day.activities.run && !day.activities.lift && !day.activities.calories && (
+                                <div className="text-center">
+                                  <span className="text-xs text-gray-400">Rest Day</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {calendarView === 'last30' && (
+                  <div>
+                    {/* Day headers */}
+                    <div className="grid grid-cols-7 gap-0 mb-2">
+                      {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => (
+                        <div key={day} className="p-2 text-center">
+                          <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">{day}</p>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Calendar grid */}
+                    <div className="grid grid-cols-7 gap-0 border border-gray-200 rounded-lg overflow-hidden">
+                      {last30Days.map((day, index) => {
+                        const isFirstOfMonth = day.date === 1
+                        const monthName = day.fullDate.toLocaleDateString('en-US', { month: 'long' })
+                        
+                        return (
+                          <div key={index} className="border-r border-b border-gray-200 last:border-r-0 bg-white min-h-[120px] p-2">
+                            <div className="mb-2">
+                              <p className="text-sm font-bold text-black">
+                                {isFirstOfMonth ? `${monthName} ${day.date}` : day.date}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              {day.activities.run && (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                  <span className="text-xs text-gray-600">Run</span>
+                                </div>
+                              )}
+                              {day.activities.lift && (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                                  <span className="text-xs text-gray-600">Lift</span>
+                                </div>
+                              )}
+                              {day.activities.calories && (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  <span className="text-xs text-gray-600">Deficit</span>
+                                </div>
+                              )}
+                              {!day.activities.run && !day.activities.lift && !day.activities.calories && (
+                                <div className="text-center">
+                                  <span className="text-xs text-gray-400">Rest Day</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {calendarView === 'all' && (
+                  <div>
+                    {/* Day headers */}
+                    <div className="grid grid-cols-7 gap-0 mb-2">
+                      {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(day => (
+                        <div key={day} className="p-2 text-center">
+                          <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">{day}</p>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {/* Calendar grid */}
+                    <div className="grid grid-cols-7 gap-0 border border-gray-200 rounded-lg overflow-hidden">
+                      {all100Days.map((day, index) => {
+                        const isFirstOfMonth = day.date === 1
+                        const monthName = day.fullDate.toLocaleDateString('en-US', { month: 'long' })
+                        
+                        return (
+                          <div key={index} className="border-r border-b border-gray-200 last:border-r-0 bg-white min-h-[120px] p-2">
+                            <div className="mb-2">
+                              <p className="text-sm font-bold text-black">
+                                {isFirstOfMonth ? `${monthName} ${day.date}` : day.date}
+                              </p>
+                            </div>
+                            <div className="space-y-1">
+                              {day.activities.run && (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                                  <span className="text-xs text-gray-600">Run</span>
+                                </div>
+                              )}
+                              {day.activities.lift && (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                                  <span className="text-xs text-gray-600">Lift</span>
+                                </div>
+                              )}
+                              {day.activities.calories && (
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                  <span className="text-xs text-gray-600">Deficit</span>
+                                </div>
+                              )}
+                              {!day.activities.run && !day.activities.lift && !day.activities.calories && (
+                                <div className="text-center">
+                                  <span className="text-xs text-gray-400">Rest Day</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
                 
                 {/* Legend */}
                 <div className="mt-4 flex items-center justify-center gap-6 text-sm">
